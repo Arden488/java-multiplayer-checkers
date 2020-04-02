@@ -1,3 +1,11 @@
+# IDE
+.idea
+*.iml
+
+# Build files
+out/
+*.class
+
 # Compiled class file
 *.class
 
