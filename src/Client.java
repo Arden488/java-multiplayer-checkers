@@ -12,6 +12,7 @@ public class Client {
     private final int PORT = 5678;
     private final String HOST = "127.0.0.1";
     private Socket server = null;
+    private GameView view = null;
 
     /**
      * Constructor
@@ -19,11 +20,11 @@ public class Client {
     public Client() {
         connect();
 
-        new GameView();
-
         // Create a client worker and run it
-        ClientWorker worker = new ClientWorker(server);
+        ClientWorker worker = new ClientWorker(server, this);
         worker.execute();
+
+        this.view = new GameView(worker);
     }
 
     /**
@@ -36,6 +37,23 @@ public class Client {
             System.out.println("Connected to the server at: " + HOST + ":" + PORT);
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    /**
+     * Event handler method
+     * Accepts data and reacts according to the data type
+     * @param data
+     */
+    protected void handleEvent(Data data) {
+        String type = data.getType();
+
+        switch (type) {
+            case "test":
+                view.test((TestData) data.getPayload());
+                break;
+            default:
+                System.out.println(type);
         }
     }
 

@@ -12,10 +12,13 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 
 public class ClientWorker extends SwingWorker<Void, Void> {
+    private Client client = null;
     private ObjectInputStream inputStream = null;
     private ObjectOutputStream outputStream = null;
 
-    public ClientWorker(Socket server) {
+    protected ClientWorker(Socket server, Client client) {
+        this.client = client;
+
         try {
             outputStream = new ObjectOutputStream(server.getOutputStream());
             inputStream = new ObjectInputStream(server.getInputStream());
@@ -29,16 +32,15 @@ public class ClientWorker extends SwingWorker<Void, Void> {
     /**
      * Work method for the SwingWorker
      */
-    public Void doInBackground() {
-        Object data = null;
+    protected Void doInBackground() {
+        Data data = null;
 
         try {
             // TODO: Use event manager for handling input streams
             // Get an object from a client via input stream
-            data = (Object) inputStream.readObject();
 
-            while (data != null) {
-                System.out.println(data);
+            while ((data = (Data) inputStream.readObject()) != null) {
+                this.client.handleEvent(data);
             }
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
@@ -46,6 +48,18 @@ public class ClientWorker extends SwingWorker<Void, Void> {
             e.printStackTrace();
         } finally {
             return null;
+        }
+    }
+
+    /**
+     * Send data to the server
+     * @param data
+     */
+    protected void dispatchData(Data data) {
+        try {
+            outputStream.writeObject(data);
+        } catch(IOException ex) {
+            ex.printStackTrace();
         }
     }
 }

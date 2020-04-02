@@ -6,16 +6,21 @@
  */
 
 // TODO: import only required
+import com.sun.security.ntlm.Client;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
 public class BoardView extends JPanel implements MouseListener {
+    private ClientWorker worker = null;
+
     /**
      * Constructor
      */
-    public BoardView() {
+    public BoardView(ClientWorker worker) {
+        this.worker = worker;
         this.addMouseListener(this);
     }
 
@@ -34,7 +39,9 @@ public class BoardView extends JPanel implements MouseListener {
      * @param evt
      */
     public void mousePressed(MouseEvent evt) {
-        System.out.println(evt);
+        String message = "X: " + evt.getX() + ", Y: " + evt.getY();
+        Data data = new Data(new TestData(message), "test");
+        this.worker.dispatchData(data);
     }
 
     /**

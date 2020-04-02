@@ -75,15 +75,18 @@ public class Server implements Runnable {
         }
     }
 
-    public void transmit() {
-        System.out.println(players[0]);
-        System.out.println(players[1]);
+    protected void transmit(Data data) {
+        players[0].dispatchData(data);
+        players[1].dispatchData(data);
     }
 
-    public void onPlayerDisconnect(int playerID) {
+    /**
+     * Remove the player from the players list on disconnect
+     * @param playerID
+     */
+    protected void onPlayerDisconnect(int playerID) {
         players[playerID] = null;
         connectionNum--;
-        System.out.println(players);
     }
 
     /**

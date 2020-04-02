@@ -11,7 +11,9 @@ import java.awt.*;
 import java.util.HashMap;
 
 public class GameView extends JFrame {
-    private int cellSize = 60;
+    private ClientWorker worker = null;
+
+    private int cellSize = 30;
     private int cellAxisCount = 8;
     private int windowPanelOffset = 22;
     private int boardBorderWidth = 20;
@@ -26,7 +28,9 @@ public class GameView extends JFrame {
     /**
      * Constructor
      */
-    public GameView() {
+    public GameView(ClientWorker worker) {
+        this.worker = worker;
+
         setupColors();
         setupFrame();
 
@@ -68,7 +72,7 @@ public class GameView extends JFrame {
         JPanel layoutPanel = new JPanel(new BorderLayout());
 
         // Paint and display the board
-        BoardView boardDisplay = new BoardView();
+        BoardView boardDisplay = new BoardView(worker);
         layoutPanel.add(boardDisplay, BorderLayout.CENTER);
 
         // Create and attach options panel
@@ -124,5 +128,9 @@ public class GameView extends JFrame {
         optionsPanel.add(this.payloadLabel, gbc);
 
         return optionsPanel;
+    }
+
+    public void test(TestData data) {
+        payloadLabel.setText(data.toString());
     }
 }

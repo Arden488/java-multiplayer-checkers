@@ -22,7 +22,7 @@ public class ServerWorker implements Runnable {
     /**
      * Constructor
      */
-    public ServerWorker(Socket socket, Server server, int playerID, GameModel model) {
+    protected ServerWorker(Socket socket, Server server, int playerID, GameModel model) {
         this.socket = socket;
         this.model = model;
         this.playerID = playerID;
@@ -44,11 +44,10 @@ public class ServerWorker implements Runnable {
         try {
             // TODO: Use event manager for handling input streams
             // Get an object from a client via input stream
-            Object data = (Object) inputStream.readObject();
+            Data data = null;
 
-            while (data != null) {
-                System.out.println(data);
-                this.server.transmit();
+            while ((data = (Data) inputStream.readObject()) != null) {
+                handleEvent(data);
             }
 
             inputStream.close();
@@ -57,6 +56,28 @@ public class ServerWorker implements Runnable {
         } catch (IOException e) {
             this.server.onPlayerDisconnect(playerID);
             System.out.println("Client disconnected");
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Event handler method
+     * Accepts data and reacts according to the data type
+     * @param data
+     */
+    private void handleEvent(Data data) {
+        String type = data.getType();
+
+        switch (type) {
+            default:
+                this.server.transmit(data);
+        }
+    }
+
+    protected void dispatchData(Data data) {
+        try {
+            outputStream.writeObject(data);
+        }catch(IOException e) {
             e.printStackTrace();
         }
     }
