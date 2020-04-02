@@ -14,12 +14,14 @@ public class Server implements Runnable {
     private final int PORT = 5678;
     private ServerSocket server;
 
+    private GameModel model;
+
     /**
      * Constructor
      */
     public Server() {
-        // Create server socket to wait for connections
         try {
+            // Create server socket to wait for connections
             server = new ServerSocket(PORT);
         } catch (IOException e) {
             e.printStackTrace();
@@ -33,13 +35,16 @@ public class Server implements Runnable {
         while (true) {
             Socket clientSocket = null;
 
+            // Initiate new game model
+            model = new GameModel();
+
             try {
                 // Wait for connection and create a new client
                 clientSocket = server.accept();
                 System.out.println("New client connected");
 
                 // Create a client worker
-                ServerWorker client = new ServerWorker(clientSocket);
+                ServerWorker client = new ServerWorker(clientSocket, model);
 
                 // Create a client thread
                 new Thread(client).start();

@@ -15,11 +15,14 @@ public class ServerWorker implements Runnable {
     private ObjectInputStream inputStream = null;
     private ObjectOutputStream outputStream = null;
 
+    private GameModel model;
+
     /**
      * Constructor
      */
-    public ServerWorker(Socket socket) {
+    public ServerWorker(Socket socket, GameModel model) {
         this.socket = socket;
+        this.model = model;
 
         // Create input and output streams
         try {
