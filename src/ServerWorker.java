@@ -12,17 +12,21 @@ import java.net.Socket;
 
 public class ServerWorker implements Runnable {
     private Socket socket = null;
+    private Server server = null;
     private ObjectInputStream inputStream = null;
     private ObjectOutputStream outputStream = null;
 
     private GameModel model;
+    private int playerID;
 
     /**
      * Constructor
      */
-    public ServerWorker(Socket socket, GameModel model) {
+    public ServerWorker(Socket socket, Server server, int playerID, GameModel model) {
         this.socket = socket;
         this.model = model;
+        this.playerID = playerID;
+        this.server = server;
 
         // Create input and output streams
         try {
@@ -44,12 +48,14 @@ public class ServerWorker implements Runnable {
 
             while (data != null) {
                 System.out.println(data);
+                this.server.transmit();
             }
 
             inputStream.close();
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
+            this.server.onPlayerDisconnect(playerID);
             System.out.println("Client disconnected");
             e.printStackTrace();
         }

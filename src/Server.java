@@ -12,9 +12,12 @@ import java.net.Socket;
 public class Server implements Runnable {
     // Port to connect
     private final int PORT = 5678;
+    private final int MAXIMUM_CONNECTIONS = 2;
+    private int connectionNum = 0;
     private ServerSocket server;
 
     private GameModel model;
+    private ServerWorker players[] = new ServerWorker[2];
 
     /**
      * Constructor
@@ -35,23 +38,52 @@ public class Server implements Runnable {
         while (true) {
             Socket clientSocket = null;
 
+            // TODO: maybe initiate game model every time the second player connects (event after disconnect)
             // Initiate new game model
             model = new GameModel();
 
             try {
-                // Wait for connection and create a new client
+                // Wait for connection and create a new socket
                 clientSocket = server.accept();
-                System.out.println("New client connected");
 
-                // Create a client worker
-                ServerWorker client = new ServerWorker(clientSocket, model);
+                // If connections is less than acceptable limit (2)
+                // connect and create a client
+                // else - close the socket
+                if (connectionNum < MAXIMUM_CONNECTIONS) {
+                    connectionNum++;
 
-                // Create a client thread
-                new Thread(client).start();
+                    // Identify vacant player slots (0 or 1)
+                    int playerID = players[0] == null ? 0 : 1;
+
+                    // Create a client worker
+                    ServerWorker client = new ServerWorker(clientSocket, this, playerID, model);
+
+                    // Add client to the players array
+                    players[playerID] = client;
+
+                    // Create a client thread
+                    new Thread(client).start();
+
+                    System.out.println("New client connected");
+                } else {
+                    System.out.println("Refused client connection");
+                    clientSocket.close();
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
+    }
+
+    public void transmit() {
+        System.out.println(players[0]);
+        System.out.println(players[1]);
+    }
+
+    public void onPlayerDisconnect(int playerID) {
+        players[playerID] = null;
+        connectionNum--;
+        System.out.println(players);
     }
 
     /**

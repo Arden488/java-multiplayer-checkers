@@ -20,7 +20,9 @@ public class ClientWorker extends SwingWorker<Void, Void> {
             outputStream = new ObjectOutputStream(server.getOutputStream());
             inputStream = new ObjectInputStream(server.getInputStream());
         } catch (IOException e) {
+            System.out.println("You were disconnected from the server...");
             e.printStackTrace();
+            System.exit(1);
         }
     }
 
