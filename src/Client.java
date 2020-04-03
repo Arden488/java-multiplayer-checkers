@@ -53,29 +53,28 @@ public class Client {
      * @param data
      */
     protected void handleEvent(Data data) {
-        String type = data.getType();
+        ExchangeEvent type = data.getType();
 
         // TODO: use common class to avoid repetition
         switch (type) {
-            case "NEW_ROUND":
+            case NEW_ROUND:
                 this.worker.setIsYourTurn(data);
                 this.view.handleNewRound(data);
                 break;
-            case "NEW_GAME":
+            case NEW_GAME:
                 this.worker.setIsYourTurn(data);
                 this.view.handleNewGame(data);
                 break;
-            case "GAME_OVER":
+            case GAME_OVER:
                 this.view.handleGameOver(data);
-                // TODO: handle game over data
                 break;
-            case "ASSIGN_PLAYER_ID":
+            case ASSIGN_PLAYER_ID:
                 setPlayerID(data);
                 break;
-            case "REQUEST_NEWGAME":
+            case REQUEST_NEW_GAME:
                 this.view.handleRequestNewGame();
                 break;
-            case "WAITING_FOR_OPPONENT":
+            case WAITING_FOR_OPPONENT:
                 this.view.handleAwaitingOpponent();
                 break;
         }
@@ -131,26 +130,18 @@ public class Client {
         }
 
         protected void registerNewGameRequest() {
-            Data dataToSend = new Data("REQUEST_NEW_GAME");
+            Data dataToSend = new Data(ExchangeEvent.REQUEST_NEW_GAME);
 
-            dispatcher(dataToSend);
+            transmitData(dataToSend);
         }
 
         protected void registerMove(int fromRow, int fromCol, int toRow, int toCol) {
             MoveData move = new MoveData(fromRow, fromCol, toRow, toCol, !isPlayingRed());
 
-            Data dataToSend = new Data("MOVE");
+            Data dataToSend = new Data(ExchangeEvent.NEW_MOVE);
             dataToSend.setPayload(move);
 
-            dispatcher(dataToSend);
-        }
-
-        protected void dispatcher(Data data) {
-            switch (data.getType()) {
-                case "REQUEST_NEW_GAME":
-                case "MOVE":
-                    transmitData(data);
-            }
+            transmitData(dataToSend);
         }
 
         /**

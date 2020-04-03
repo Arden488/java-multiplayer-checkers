@@ -188,21 +188,19 @@ public class Server implements Runnable {
          * @param data
          */
         private void handleEvent(Data data) {
-            String type = data.getType();
+            ExchangeEvent type = data.getType();
 
-            // TODO: use common class to avoid repetition
             switch (type) {
-                case "MOVE":
+                case NEW_MOVE:
                     handleMove(data);
                     break;
-                case "REQUEST_NEW_GAME":
+                case REQUEST_NEW_GAME:
                     handleRequestNewGame();
                     break;
             }
         }
 
         protected void dispatcher(int targetPlayerID, Data data) {
-            // TODO: use common class to avoid repetition
             this.server.transmit(targetPlayerID, data);
         }
 
@@ -216,22 +214,21 @@ public class Server implements Runnable {
         }
 
         public void sendPlayerID() {
-            Data dataToSend = new Data("ASSIGN_PLAYER_ID");
+            Data dataToSend = new Data(ExchangeEvent.ASSIGN_PLAYER_ID);
             dataToSend.setPayload(new PlayerData(playerID));
 
             dispatcher(playerID, dataToSend);
         }
 
         public void handleAwaitAnotherPlayer() {
-            Data dataToSend = new Data("WAITING_FOR_OPPONENT");
+            Data dataToSend = new Data(ExchangeEvent.WAITING_FOR_OPPONENT);
 
-            // TODO: send both players method
             dispatcher(playerID, dataToSend);
         }
 
         public void handleNewGame() {
             NewRoundData newRoundData = new NewRoundData(model.getBoard(), model.generateAllowedMoves(), model.getActivePlayerID());
-            Data dataToSend = new Data("NEW_GAME");
+            Data dataToSend = new Data(ExchangeEvent.NEW_GAME);
             // TODO: use different constructors
             dataToSend.setPayload(newRoundData);
 
@@ -239,7 +236,7 @@ public class Server implements Runnable {
         }
 
         public void handleEnoughPlayers() {
-            Data dataToSend = new Data("REQUEST_NEWGAME");
+            Data dataToSend = new Data(ExchangeEvent.REQUEST_NEW_GAME);
 
             dispatcher(playerID, dataToSend);
         }
@@ -268,7 +265,7 @@ public class Server implements Runnable {
                 handleGameOver(currentPlayerID);
             } else {
                 NewRoundData newRoundData = new NewRoundData(model.getBoard(), allowedMoves, model.getActivePlayerID());
-                Data dataToSend = new Data("NEW_ROUND");
+                Data dataToSend = new Data(ExchangeEvent.NEW_ROUND);
                 dataToSend.setPayload(newRoundData);
 
                 for (int i = 0; i < 2; i++) {
@@ -283,7 +280,7 @@ public class Server implements Runnable {
         }
 
         private void handleGameOver(int winnerID) {
-            Data dataToSend = new Data("GAME_OVER");
+            Data dataToSend = new Data(ExchangeEvent.GAME_OVER);
             dataToSend.setPayload(new GameOverData(winnerID));
 
             for (int i = 0; i < 2; i++) {

@@ -9,15 +9,15 @@
 
 import java.io.Serializable;
 
-public class Data<T> implements Serializable, GameStatus {
+public class Data<T> implements Serializable {
     private T payload = null;
-    private String type;
+    private ExchangeEvent type;
 
     /**
      * Constructor
      * @param type
      */
-    public Data(String type) {
+    public Data(ExchangeEvent type) {
         this.type = type;
     }
 
@@ -25,7 +25,7 @@ public class Data<T> implements Serializable, GameStatus {
      * Type getter
      * @return String type
      */
-    public String getType() {
+    public ExchangeEvent getType() {
         return type;
     }
 
@@ -39,13 +39,5 @@ public class Data<T> implements Serializable, GameStatus {
 
     public void setPayload(T payload) {
         this.payload = payload;
-    }
-
-    @Override
-    public String toString() {
-        return "Data {" +
-                "payload=" + payload +
-                ", type='" + type + '\'' +
-                '}';
     }
 }

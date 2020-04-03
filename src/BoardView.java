@@ -61,13 +61,16 @@ public class BoardView extends JPanel implements MouseListener, ViewSettings {
             g.fillRect(cellXPos, cellYPos, CELL_SIZE, CELL_SIZE);
         }
 
+        if (gameOver) {
+            drawGameOver(g);
+        }
+
         // TODO: remove
         if (!gameInProgress || !worker.getIsYourTurn())
             return;
-        System.out.println(allowedMoves);
+
         if (allowedMoves.size() > 0) {
             for (MoveData move : allowedMoves) {
-                System.out.println(move);
                 int cellXPos = move.getFromCol() * CELL_SIZE + BOARD_BORDER_WIDTH;
                 int cellYPos = move.getFromRow() * CELL_SIZE + BOARD_BORDER_WIDTH;
                 g.setColor(new Color(0, 255, 0, 100));
@@ -110,10 +113,6 @@ public class BoardView extends JPanel implements MouseListener, ViewSettings {
         int pieceYPos = cellYPos + (cellPieceMargin / 2) - (shadowSize / 2);
         int pieceWidth = CELL_SIZE - cellPieceMargin;
         int pieceHeight = CELL_SIZE - cellPieceMargin;
-
-        if (gameOver) {
-            drawGameOver(g);
-        }
 
         if (!gameInProgress && !gameOver)
             return;
@@ -161,7 +160,7 @@ public class BoardView extends JPanel implements MouseListener, ViewSettings {
                 g.fillOval(pieceXPos, pieceYPos + shadowSize, pieceWidth, pieceHeight);
                 g.setColor(WHITE_PIECE_COLOR);
                 g.fillOval(pieceXPos, pieceYPos, pieceWidth, pieceHeight);
-                g.setColor(Color.BLACK);
+                g.setColor(TEXT_COLOR);
                 g.drawString(kingLabelText, kingLabelPosX, kingLabelPosY);
                 break;
         }
@@ -170,7 +169,7 @@ public class BoardView extends JPanel implements MouseListener, ViewSettings {
     private void drawGameOver(Graphics g) {
         String text1 = "GAME OVER";
         String text2 = "WINNER: " + (winnerID == 0 ? "RED" : "WHITE");
-        g.setColor(Color.BLACK);
+        g.setColor(TEXT_COLOR);
         Font font = new Font("Arial", Font.BOLD, 40);
         g.setFont(font);
         FontMetrics metrics = g.getFontMetrics(font);
@@ -208,10 +207,6 @@ public class BoardView extends JPanel implements MouseListener, ViewSettings {
         if (!gameInProgress || !worker.getIsYourTurn())
             return;
 
-        int piece = getBoardPiece(row, col);
-
-//        System.out.println("Piece at row " + row + " and col + " + col + " is " + piece );
-
         for (MoveData move: allowedMoves) {
             if (move.getFromRow() == row && move.getFromCol() == col) {
                 selectedRow = row;
@@ -241,7 +236,6 @@ public class BoardView extends JPanel implements MouseListener, ViewSettings {
      * @param evt
      */
     public void mousePressed(MouseEvent evt) {
-        // TODO: wrong click position
         int col = (evt.getX() - BOARD_BORDER_WIDTH) / CELL_SIZE;
         int row = (evt.getY() - BOARD_BORDER_WIDTH) / CELL_SIZE;
         if (col >= 0 && col < 8 && row >= 0 && row < 8)

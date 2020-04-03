@@ -10,4 +10,5 @@ public interface ViewSettings {
     public static final Color WHITE_PIECE_COLOR = Color.WHITE;
     public static final Color PIECE_SHADOW_COLOR = Color.BLACK;
     public static final Color BACKGROUND_COLOR = Color.BLACK;
+    public static final Color TEXT_COLOR = Color.BLACK;
 }
