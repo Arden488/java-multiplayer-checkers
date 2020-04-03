@@ -3,7 +3,7 @@
  * Author: Anton Samoilov <2459087s@student.gla.ac.uk>, matric 2459087S
  * ------------
  * This class carries data that is transferred between client and server.
- * Payload accepts different objects. Type is a string to help event handlers
+ * Payload accepts different objects. Type is a ExchangeEvent label to help event handlers
  * identify the type of payload
  */
 

@@ -1,3 +1,10 @@
+/**
+ * View settings interface
+ * Author: Anton Samoilov <2459087s@student.gla.ac.uk>, matric 2459087S
+ * ------------
+ * This interface is used to pass constants to multiple classes
+ */
+
 import java.awt.Color;
 
 public interface ViewSettings {
