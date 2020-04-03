@@ -1,13 +1,3 @@
-/**
- * Board view class
- * Author: Anton Samoilov <2459087s@student.gla.ac.uk>, matric 2459087S
- * ------------
- * This class draws the board
- */
-
-// TODO: import only required
-import com.sun.security.ntlm.Client;
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
@@ -17,7 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class BoardView extends JPanel implements MouseListener {
-    private ClientWorker worker = null;
+    private Client.Worker worker = null;
     private GameView view = null;
     private Boolean gameInProgress = false;
     private Boolean gameOver = false;
@@ -44,7 +34,7 @@ public class BoardView extends JPanel implements MouseListener {
     /**
      * Constructor
      */
-    public BoardView(ClientWorker worker, GameView view) {
+    public BoardView(Client.Worker worker, GameView view) {
         this.view = view;
         this.worker = worker;
         this.addMouseListener(this);

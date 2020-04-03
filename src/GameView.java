@@ -4,7 +4,7 @@ import java.awt.event.*;
 import java.util.HashMap;
 
 public class GameView extends JFrame implements ActionListener {
-    private ClientWorker worker = null;
+    private Client.Worker worker = null;
 
     private BoardView boardDisplay = null;
 
@@ -179,7 +179,7 @@ public class GameView extends JFrame implements ActionListener {
         return windowPanelOffset;
     }
 
-    public void setWorker(ClientWorker worker) {
+    public void setWorker(Client.Worker worker) {
         this.worker = worker;
     }
 

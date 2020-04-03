@@ -6,8 +6,11 @@
  */
 
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 
 public class Server implements Runnable {
     // Port to connect
@@ -19,7 +22,7 @@ public class Server implements Runnable {
     private GameModel model;
     // TODO: reset after player disconnect
     private int playersReady = 0;
-    private ServerWorker players[] = new ServerWorker[2];
+    private ClientWorker players[] = new ClientWorker[2];
 
     /**
      * Constructor
@@ -37,8 +40,6 @@ public class Server implements Runnable {
      * Run method for the thread
      */
     public void run() {
-        // TODO: maybe initiate game model every time the second player connects (event after disconnect)
-
         while (true) {
             Socket clientSocket = null;
 
@@ -56,7 +57,7 @@ public class Server implements Runnable {
                     int playerID = players[0] == null ? 0 : 1;
 
                     // Create a client worker
-                    ServerWorker client = new ServerWorker(clientSocket, this, playerID);
+                    ClientWorker client = new ClientWorker(clientSocket, this, playerID);
                     // Add client to the players array
                     players[playerID] = client;
 
@@ -87,7 +88,7 @@ public class Server implements Runnable {
     }
 
     protected void transmit(int targetPlayerID, Data data) {
-        ServerWorker targetPlayer = getPlayerByID(targetPlayerID);
+        ClientWorker targetPlayer = getPlayerByID(targetPlayerID);
 
         targetPlayer.transmitData(data);
     }
@@ -109,10 +110,10 @@ public class Server implements Runnable {
             // Initiate new game model
             model = new GameModel();
 
-            players[0].setModel(model);
-            players[0].handleNewGame();
-            players[1].setModel(model);
-            players[1].handleNewGame();
+            for (int i = 0; i < 2; i++) {
+                players[i].setModel(model);
+                players[i].handleNewGame();
+            }
         }
 
     }
@@ -121,8 +122,191 @@ public class Server implements Runnable {
         this.playersReady = playersReady;
     }
 
-    private ServerWorker getPlayerByID(int playerID) {
+    private ClientWorker getPlayerByID(int playerID) {
         return players[playerID];
+    }
+
+    /**
+     * Inner class
+     * This class does the server work to communicate with every client
+     */
+    public class ClientWorker implements Runnable {
+        private Socket socket = null;
+        private Server server = null;
+        private ObjectInputStream inputStream = null;
+        private ObjectOutputStream outputStream = null;
+
+        private GameModel model;
+        private int playerID;
+
+        /**
+         * Constructor
+         */
+        protected ClientWorker(Socket socket, Server server, int playerID) {
+            this.socket = socket;
+            this.playerID = playerID;
+            this.server = server;
+
+            // Create input and output streams
+            try {
+                outputStream = new ObjectOutputStream(this.socket.getOutputStream());
+                inputStream = new ObjectInputStream(this.socket.getInputStream());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        /**
+         * Run method for the thread
+         */
+        public void run() {
+            try {
+                // Get an object from a client via input stream
+                Data data = null;
+
+                while ((data = (Data) inputStream.readObject()) != null) {
+                    handleEvent(data);
+                }
+
+                inputStream.close();
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                this.server.onPlayerDisconnect(playerID);
+                System.out.println("Client disconnected");
+                e.printStackTrace();
+            }
+        }
+
+        public void setModel(GameModel model) {
+            this.model = model;
+        }
+
+        /**
+         * Event handler method
+         * Accepts data and reacts according to the data type
+         * @param data
+         */
+        private void handleEvent(Data data) {
+            String type = data.getType();
+
+            // TODO: use common class to avoid repetition
+            switch (type) {
+                case "MOVE":
+                    handleMove(data);
+                    break;
+                case "REQUEST_NEW_GAME":
+                    handleRequestNewGame();
+                    break;
+            }
+        }
+
+        protected void dispatcher(int targetPlayerID, Data data) {
+            // TODO: use common class to avoid repetition
+            this.server.transmit(targetPlayerID, data);
+        }
+
+        protected void transmitData(Data data) {
+            try {
+                outputStream.writeObject(data);
+                outputStream.reset();
+            }catch(IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        public void sendPlayerID() {
+            Data dataToSend = new Data("ASSIGN_PLAYER_ID");
+            dataToSend.setPayload(new PlayerData(playerID));
+
+            dispatcher(playerID, dataToSend);
+        }
+
+        public void handleAwaitAnotherPlayer() {
+            Data dataToSend = new Data("WAITING_FOR_OPPONENT");
+
+            // TODO: send both players method
+            dispatcher(playerID, dataToSend);
+        }
+
+        public void handleNewGame() {
+            NewRoundData newRoundData = new NewRoundData(model.getBoard(), model.generateAllowedMoves(), model.getActivePlayerID());
+            Data dataToSend = new Data("NEW_GAME");
+            // TODO: use different constructors
+            dataToSend.setPayload(newRoundData);
+
+            dispatcher(playerID, dataToSend);
+        }
+
+        public void handleEnoughPlayers() {
+            Data dataToSend = new Data("REQUEST_NEWGAME");
+
+            dispatcher(playerID, dataToSend);
+        }
+
+        private void handleMove(Data receivedData) {
+            if (!isActivePlayer()) return;
+
+            int currentPlayerID = model.getActivePlayerID();
+
+            // TODO: DO SOMETHING WITH RECEIVED DATA
+            MoveData move = (MoveData) receivedData.getPayload();
+            this.model.makeMove(move);
+
+            // TODO: refactor
+            if (move.isJump()) {
+                ArrayList<MoveData> allowedMoves = model.generateAllowedMovesFrom(move.getToRow(), move.getToCol());
+                if (allowedMoves == null) {
+                    changeActivePlayer();
+                }
+            } else {
+                changeActivePlayer();
+            }
+
+            ArrayList<MoveData> allowedMoves = model.generateAllowedMoves();
+            if (allowedMoves == null) {
+                handleGameOver(currentPlayerID);
+            } else {
+                NewRoundData newRoundData = new NewRoundData(model.getBoard(), allowedMoves, model.getActivePlayerID());
+                Data dataToSend = new Data("NEW_ROUND");
+                dataToSend.setPayload(newRoundData);
+
+                for (int i = 0; i < 2; i++) {
+                    dispatcher(i, dataToSend);
+                }
+            }
+        }
+
+        private void changeActivePlayer() {
+            int otherPlayerID = getOtherPlayerID();
+            model.setActivePlayerID(otherPlayerID);
+        }
+
+        private void handleGameOver(int winnerID) {
+            Data dataToSend = new Data("GAME_OVER");
+            dataToSend.setPayload(new GameOverData(winnerID));
+
+            for (int i = 0; i < 2; i++) {
+                dispatcher(i, dataToSend);
+            }
+
+            this.server.setPlayersReady(0);
+        }
+
+        private void handleRequestNewGame() {
+            this.server.onPlayerRequestNewGame();
+        }
+
+        private int getOtherPlayerID() {
+            return model.getActivePlayerID() == 0 ? 1 : 0;
+        }
+
+        private Boolean isActivePlayer() {
+            if (playerID == model.getActivePlayerID())
+                return true;
+
+            return false;
+        }
     }
 
     /**
