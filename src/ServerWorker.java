@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.ArrayList;
 
 public class ServerWorker implements Runnable, GameStatus {
     private Socket socket = null;
@@ -22,7 +23,7 @@ public class ServerWorker implements Runnable, GameStatus {
     /**
      * Constructor
      */
-    protected ServerWorker(Socket socket, Server server, int playerID, GameModel model) {
+    protected ServerWorker(Socket socket, Server server, int playerID) {
         this.socket = socket;
         this.model = model;
         this.playerID = playerID;
@@ -61,6 +62,10 @@ public class ServerWorker implements Runnable, GameStatus {
         }
     }
 
+    public void setModel(GameModel model) {
+        this.model = model;
+    }
+
     /**
      * Event handler method
      * Accepts data and reacts according to the data type
@@ -73,8 +78,10 @@ public class ServerWorker implements Runnable, GameStatus {
         switch (type) {
             case "MOVE":
                 handleMove(data);
+                break;
             case "REQUEST_NEW_GAME":
                 handleRequestNewGame();
+                break;
         }
     }
 
@@ -107,7 +114,7 @@ public class ServerWorker implements Runnable, GameStatus {
     }
 
     public void handleNewGame() {
-        NewRoundData newRoundData = new NewRoundData(model.getBoard(), model.getAllowedMoves(), model.getActivePlayerID());
+        NewRoundData newRoundData = new NewRoundData(model.getBoard(), model.generateAllowedMoves(), model.getActivePlayerID());
         Data dataToSend = new Data("NEW_GAME");
         // TODO: use different constructors
         dataToSend.setPayload(newRoundData);
@@ -124,19 +131,47 @@ public class ServerWorker implements Runnable, GameStatus {
     private void handleMove(Data receivedData) {
         if (!isActivePlayer()) return;
 
+        int currentPlayerID = model.getActivePlayerID();
+
         // TODO: DO SOMETHING WITH RECEIVED DATA
         MoveData move = (MoveData) receivedData.getPayload();
         this.model.makeMove(move);
 
+        // TODO: refactor
+        if (move.isJump()) {
+            ArrayList<MoveData> allowedMoves = model.generateAllowedMovesFrom(move.getToRow(), move.getToCol());
+            if (allowedMoves == null) {
+                changeActivePlayer();
+            }
+        } else {
+            changeActivePlayer();
+        }
+
+        ArrayList<MoveData> allowedMoves = model.generateAllowedMoves();
+        if (allowedMoves == null) {
+            handleGameOver(currentPlayerID);
+        } else {
+            NewRoundData newRoundData = new NewRoundData(model.getBoard(), allowedMoves, model.getActivePlayerID());
+            Data dataToSend = new Data("NEW_ROUND");
+            dataToSend.setPayload(newRoundData);
+
+            dispatcher(0, dataToSend);
+            dispatcher(1, dataToSend);
+        }
+    }
+
+    private void changeActivePlayer() {
         int otherPlayerID = getOtherPlayerID();
         model.setActivePlayerID(otherPlayerID);
+    }
 
-        NewRoundData newRoundData = new NewRoundData(model.getBoard(), model.getAllowedMoves(), model.getActivePlayerID());
-        Data dataToSend = new Data("NEW_ROUND");
-        dataToSend.setPayload(newRoundData);
+    private void handleGameOver(int winnerID) {
+        Data dataToSend = new Data("GAME_OVER");
+        dataToSend.setPayload(new GameOverData(winnerID));
 
         dispatcher(0, dataToSend);
         dispatcher(1, dataToSend);
+        this.server.setPlayersReady(0);
     }
 
     private void handleRequestNewGame() {

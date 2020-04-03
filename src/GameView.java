@@ -133,7 +133,9 @@ public class GameView extends JFrame implements ActionListener {
         changeActivePlayerMessage();
 
         this.boardDisplay.setGameInProgress(true);
+        this.boardDisplay.setGameOver(false, -1);
         this.boardDisplay.setBoardData(newRoundData.getBoardState());
+        this.boardDisplay.setAllowedMoves(newRoundData.getAllowedMoves());
         this.boardDisplay.updateBoard();
     }
 
@@ -145,12 +147,23 @@ public class GameView extends JFrame implements ActionListener {
         }
     }
 
+    public void handleGameOver(Data data) {
+        GameOverData gameOver = (GameOverData) data.getPayload();
+
+        this.boardDisplay.displayWinner(gameOver.getWinnerID());
+        this.boardDisplay.updateBoard();
+
+        this.newGameButton.setEnabled(true);
+        this.logTextLabel.setText("Press New Game to start");
+    }
+
     public void handleNewRound(Data data) {
         NewRoundData newRoundData = (NewRoundData) data.getPayload();
 
         changeActivePlayerMessage();
 
         this.boardDisplay.setBoardData(newRoundData.getBoardState());
+        this.boardDisplay.setAllowedMoves(newRoundData.getAllowedMoves());
         this.boardDisplay.updateBoard();
     }
 

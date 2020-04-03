@@ -12,13 +12,18 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 public class BoardView extends JPanel implements MouseListener {
     private ClientWorker worker = null;
     private GameView view = null;
     private Boolean gameInProgress = false;
+    private Boolean gameOver = false;
+    private int winnerID;
     private int[][] boardData;
+    private ArrayList<MoveData> allowedMoves;
 
     // TODO: improve DRY
     // Cell states (empty or checkers)
@@ -77,10 +82,33 @@ public class BoardView extends JPanel implements MouseListener {
             g.setColor(colorMap.get("SELECTED"));
             g.fillRect(cellXPos, cellYPos, cellSize, cellSize);
         }
+
+        // TODO: remove
+        if (!gameInProgress || !worker.getIsYourTurn())
+            return;
+        System.out.println(allowedMoves);
+        if (allowedMoves.size() > 0) {
+            for (MoveData move : allowedMoves) {
+                System.out.println(move);
+                int cellXPos = move.getFromCol() * cellSize + boardBorderWidth;
+                int cellYPos = move.getFromRow() * cellSize + boardBorderWidth;
+                g.setColor(new Color(0, 255, 0, 100));
+                g.fillRect(cellXPos, cellYPos, cellSize, cellSize);
+
+                int cellXPos2 = move.getToCol() * cellSize + boardBorderWidth;
+                int cellYPos2 = move.getToRow() * cellSize + boardBorderWidth;
+                g.setColor(new Color(0, 0, 255, 100));
+                g.fillRect(cellXPos2, cellYPos2, cellSize, cellSize);
+            }
+        }
     }
 
     public void setBoardData(int[][] board) {
         this.boardData = board;
+    }
+
+    public void setAllowedMoves(ArrayList<MoveData> allowedMoves) {
+        this.allowedMoves = allowedMoves;
     }
 
     public void updateBoard() {
@@ -105,7 +133,11 @@ public class BoardView extends JPanel implements MouseListener {
         int pieceWidth = cellSize - cellPieceMargin;
         int pieceHeight = cellSize - cellPieceMargin;
 
-        if (!gameInProgress)
+        if (gameOver) {
+            drawGameOver(g);
+        }
+
+        if (!gameInProgress && !gameOver)
             return;
 
         int piece = getBoardPiece(row, col);
@@ -127,13 +159,64 @@ public class BoardView extends JPanel implements MouseListener {
                 g.setColor(colorMap.get("WHITE_PIECE"));
                 g.fillOval(pieceXPos, pieceYPos, pieceWidth, pieceHeight);
                 break;
+            case RED_KING:
+                g.setColor(colorMap.get("PIECE_SHADOW"));
+                g.fillOval(pieceXPos - borderWidth, pieceYPos - borderWidth, pieceWidth + (borderWidth * 2), pieceHeight + (borderWidth * 2));
+                g.setColor(colorMap.get("PIECE_SHADOW"));
+                g.fillOval(pieceXPos, pieceYPos + shadowSize, pieceWidth, pieceHeight);
+                g.setColor(colorMap.get("RED_PIECE"));
+                g.fillOval(pieceXPos, pieceYPos, pieceWidth, pieceHeight);
+                g.setColor(Color.WHITE);
+                // TODO: draw king properly
+                g.setFont(new Font("Arial", Font.PLAIN, 12));
+                g.drawString("King", pieceXPos + (cellSize / 2 - 1), pieceYPos + (cellSize / 2 - 1));
+                break;
+            case WHITE_KING:
+                g.setColor(colorMap.get("PIECE_SHADOW"));
+                g.fillOval(pieceXPos - borderWidth, pieceYPos - borderWidth, pieceWidth + (borderWidth * 2), pieceHeight + (borderWidth * 2));
+                g.setColor(colorMap.get("PIECE_SHADOW"));
+                g.fillOval(pieceXPos, pieceYPos + shadowSize, pieceWidth, pieceHeight);
+                g.setColor(colorMap.get("WHITE_PIECE"));
+                g.fillOval(pieceXPos, pieceYPos, pieceWidth, pieceHeight);
+                g.setColor(Color.BLACK);
+                // TODO: draw king properly
+                g.setFont(new Font("Arial", Font.PLAIN, 12));
+                g.drawString("King", pieceXPos + (cellSize / 2 - 1), pieceYPos + (cellSize / 2 - 1));
+                break;
         }
+    }
+
+    private void drawGameOver(Graphics g) {
+        String text1 = "GAME OVER";
+        String text2 = "WINNER: " + (winnerID == 0 ? "RED" : "WHITE");
+        g.setColor(Color.BLACK);
+        Font font = new Font("Arial", Font.BOLD, 40);
+        g.setFont(font);
+        FontMetrics metrics = g.getFontMetrics(font);
+        int canvasWidth = (cellSize * 8) + (boardBorderWidth * 2);
+        int canvasHeight = (cellSize * 8) + (boardBorderWidth * 2);
+        int gameOverPosX = (canvasWidth - metrics.stringWidth(text1)) / 2;
+        int gameOverPosY = ((canvasHeight - metrics.getHeight()) / 2) + metrics.getAscent() - (metrics.getHeight() / 2);
+        int winnerPosX = (canvasWidth - metrics.stringWidth(text2)) / 2;
+        int winnerPosY = ((canvasHeight - metrics.getHeight()) / 2) + metrics.getAscent() + (metrics.getHeight() / 2);
+        g.drawString(text1, gameOverPosX, gameOverPosY);
+        g.drawString(text2, winnerPosX, winnerPosY);
+    }
+
+    public void displayWinner(int winnerID) {
+        setGameInProgress(false);
+        setGameOver(true, winnerID);
     }
 
     private int getBoardPiece(int row, int col) {
         int tRow = this.worker.isPlayingRed() ? row : (7 - row);
         int tCol = this.worker.isPlayingRed() ? col : (7 - col);
         return boardData[tRow][tCol];
+    }
+
+    public void setGameOver(Boolean status, int winnerID) {
+        this.gameOver = status;
+        this.winnerID = winnerID;
     }
 
     public void setGameInProgress(Boolean gameInProgress) {
@@ -148,22 +231,28 @@ public class BoardView extends JPanel implements MouseListener {
 
 //        System.out.println("Piece at row " + row + " and col + " + col + " is " + piece );
 
-        if (piece != 0) {
-            selectedRow = row;
-            selectedCol = col;
+        for (MoveData move: allowedMoves) {
+            if (move.getFromRow() == row && move.getFromCol() == col) {
+                selectedRow = row;
+                selectedCol = col;
 
-            repaint();
-            return;
+                repaint();
+                return;
+            }
         }
 
-        if (piece == 0 && selectedCol >= 0 && selectedRow >= 0) {
-            this.worker.registerMove(selectedRow, selectedCol, row, col);
+        for (MoveData move: allowedMoves) {
+            if (move.getFromRow() == selectedRow
+                    && move.getFromCol() == selectedCol
+                    && move.getToRow() == row && move.getToCol() == col) {
+                this.worker.registerMove(selectedRow, selectedCol, row, col);
+
+                selectedRow = -1;
+                selectedCol = -1;
+
+                repaint();
+            }
         }
-
-        selectedRow = -1;
-        selectedCol = -1;
-
-        repaint();
     }
 
     /**

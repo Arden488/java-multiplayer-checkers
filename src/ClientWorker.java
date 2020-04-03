@@ -57,9 +57,7 @@ public class ClientWorker extends SwingWorker<Void, Void> {
     }
 
     protected void registerMove(int fromRow, int fromCol, int toRow, int toCol) {
-        MoveData move = isPlayingRed() ?
-                new MoveData(fromRow, fromCol, toRow, toCol) :
-                new MoveData((7 - fromRow), (7 - fromCol), (7 - toRow), (7 - toCol));
+        MoveData move = new MoveData(fromRow, fromCol, toRow, toCol, !isPlayingRed());
 
         Data dataToSend = new Data("MOVE");
         dataToSend.setPayload(move);

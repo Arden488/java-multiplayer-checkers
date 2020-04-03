@@ -5,10 +5,10 @@ import java.util.HashMap;
 
 public class NewRoundData implements Serializable {
     private int[][] boardState;
-    private HashMap<int[], ArrayList> allowedMoves;
+    private ArrayList<MoveData> allowedMoves;
     private int activePlayerID;
 
-    public NewRoundData(int[][] boardState, HashMap<int[], ArrayList> allowedMoves, int activePlayerID) {
+    public NewRoundData(int[][] boardState, ArrayList<MoveData> allowedMoves, int activePlayerID) {
         this.boardState = boardState;
         this.allowedMoves = allowedMoves;
         this.activePlayerID = activePlayerID;
@@ -16,6 +16,10 @@ public class NewRoundData implements Serializable {
 
     public int[][] getBoardState() {
         return boardState;
+    }
+
+    public ArrayList<MoveData> getAllowedMoves() {
+        return allowedMoves;
     }
 
     public int getActivePlayerID() {

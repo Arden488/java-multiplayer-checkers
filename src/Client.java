@@ -63,8 +63,7 @@ public class Client {
                 this.view.handleNewGame(data);
                 break;
             case "GAME_OVER":
-                System.out.println("GAME OVER");
-                System.out.println(data.getPayload());
+                this.view.handleGameOver(data);
                 // TODO: handle game over data
                 break;
             case "ASSIGN_PLAYER_ID":

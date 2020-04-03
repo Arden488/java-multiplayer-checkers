@@ -38,8 +38,6 @@ public class Server implements Runnable {
      */
     public void run() {
         // TODO: maybe initiate game model every time the second player connects (event after disconnect)
-        // Initiate new game model
-        model = new GameModel();
 
         while (true) {
             Socket clientSocket = null;
@@ -58,7 +56,7 @@ public class Server implements Runnable {
                     int playerID = players[0] == null ? 0 : 1;
 
                     // Create a client worker
-                    ServerWorker client = new ServerWorker(clientSocket, this, playerID, model);
+                    ServerWorker client = new ServerWorker(clientSocket, this, playerID);
                     // Add client to the players array
                     players[playerID] = client;
 
@@ -101,16 +99,26 @@ public class Server implements Runnable {
     protected void onPlayerDisconnect(int playerID) {
         players[playerID] = null;
         connectionNum--;
+        playersReady--;
     }
 
     public void onPlayerRequestNewGame() {
         playersReady++;
 
         if (playersReady == REQUIRED_PLAYERS) {
+            // Initiate new game model
+            model = new GameModel();
+
+            players[0].setModel(model);
             players[0].handleNewGame();
+            players[1].setModel(model);
             players[1].handleNewGame();
         }
 
+    }
+
+    public void setPlayersReady(int playersReady) {
+        this.playersReady = playersReady;
     }
 
     private ServerWorker getPlayerByID(int playerID) {
