@@ -1,31 +1,28 @@
 import javax.swing.*;
+import javax.swing.text.View;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.HashMap;
 
-public class GameView extends JFrame implements ActionListener {
+public class GameView extends JFrame implements ActionListener, ViewSettings {
     private Client.Worker worker = null;
 
     private BoardView boardDisplay = null;
-
-    private int cellSize = 60;
-    private int cellAxisCount = 8;
-    private int windowPanelOffset = 22;
-    private int boardBorderWidth = 20;
-    private int optionsPanelMargin = 100;
 
     private JButton newGameButton;
     // TODO: rename
     private JLabel logTextLabel = new JLabel("");
 
-    private HashMap<String, Color> colorMap = new HashMap<String, Color>();
-
     /**
      * Constructor
      */
     public GameView() {
-        setupColors();
-        setupFrame();
+        int frameWidth = 8 * CELL_SIZE + (BOARD_BORDER_WIDTH * 2);
+        int frameHeight = 8 * CELL_SIZE + (BOARD_BORDER_WIDTH * 2) + 100;
+        this.setSize(frameWidth, frameHeight);
+        this.setResizable(false);
+        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        this.setBackground(BACKGROUND_COLOR);
     }
 
     public void drawLayout() {
@@ -33,30 +30,6 @@ public class GameView extends JFrame implements ActionListener {
         this.add(layout);
 
         this.setVisible(true);
-    }
-
-    /**
-     * Method to set frame settings
-     */
-    private void setupFrame() {
-        int frameWidth = cellAxisCount * cellSize + (boardBorderWidth * 2);
-        int frameHeight = cellAxisCount * cellSize + windowPanelOffset + (boardBorderWidth * 2) + optionsPanelMargin;
-        this.setSize(frameWidth, frameHeight);
-        this.setResizable(false);
-        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        this.setBackground(Color.BLACK);
-    }
-
-    /**
-     * Method to add colors to the color hash map
-     */
-    private void setupColors() {
-        colorMap.put("CELL_ODD", new Color(255, 239, 188));
-        colorMap.put("CELL_EVEN", new Color(85, 138, 28));
-        colorMap.put("RED_PIECE", new Color(197, 0, 0));
-        colorMap.put("SELECTED", new Color(255, 255, 255, 150));
-        colorMap.put("WHITE_PIECE", Color.WHITE);
-        colorMap.put("PIECE_SHADOW", Color.BLACK);
     }
 
     /**
@@ -114,8 +87,6 @@ public class GameView extends JFrame implements ActionListener {
             newGameButton.setEnabled(false);
             this.logTextLabel.setText("Now your opponent needs to press Start New Game");
         }
-//        else if (src == resignButton)
-//            doResign();
     }
 
     public void handleAwaitingOpponent() {
@@ -167,23 +138,7 @@ public class GameView extends JFrame implements ActionListener {
         this.boardDisplay.updateBoard();
     }
 
-    public int getCellSize() {
-        return cellSize;
-    }
-
-    public int getBoardBorderWidth() {
-        return boardBorderWidth;
-    }
-
-    public int getWindowPanelOffset() {
-        return windowPanelOffset;
-    }
-
     public void setWorker(Client.Worker worker) {
         this.worker = worker;
-    }
-
-    public HashMap<String, Color> getColorMap() {
-        return colorMap;
     }
 }

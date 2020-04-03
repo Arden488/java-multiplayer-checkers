@@ -1,3 +1,5 @@
+import com.sun.tools.internal.xjc.model.CElement;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
@@ -6,7 +8,7 @@ import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class BoardView extends JPanel implements MouseListener {
+public class BoardView extends JPanel implements MouseListener, ViewSettings {
     private Client.Worker worker = null;
     private GameView view = null;
     private Boolean gameInProgress = false;
@@ -23,11 +25,6 @@ public class BoardView extends JPanel implements MouseListener {
     public static final int WHITE = 3;
     public static final int WHITE_KING = 4;
 
-    private int cellSize;
-    private int boardBorderWidth;
-    private int windowPanelOffset;
-    private HashMap<String, Color> colorMap = new HashMap<String, Color>();
-
     private int selectedRow = -1;
     private int selectedCol = -1;
 
@@ -38,15 +35,6 @@ public class BoardView extends JPanel implements MouseListener {
         this.view = view;
         this.worker = worker;
         this.addMouseListener(this);
-        this.getViewSettings();
-    }
-
-    private void getViewSettings() {
-        // TODO: improve DRY
-        this.cellSize = view.getCellSize();
-        this.boardBorderWidth = view.getBoardBorderWidth();
-        this.colorMap = view.getColorMap();
-        this.windowPanelOffset = view.getWindowPanelOffset();
     }
 
     /**
@@ -66,11 +54,11 @@ public class BoardView extends JPanel implements MouseListener {
         }
 
         if (selectedRow >= 0 && selectedCol >= 0) {
-            int cellXPos = selectedCol * cellSize + boardBorderWidth;
-            int cellYPos = selectedRow * cellSize + boardBorderWidth;
+            int cellXPos = selectedCol * CELL_SIZE + BOARD_BORDER_WIDTH;
+            int cellYPos = selectedRow * CELL_SIZE + BOARD_BORDER_WIDTH;
 
-            g.setColor(colorMap.get("SELECTED"));
-            g.fillRect(cellXPos, cellYPos, cellSize, cellSize);
+            g.setColor(SELECTED_COLOR);
+            g.fillRect(cellXPos, cellYPos, CELL_SIZE, CELL_SIZE);
         }
 
         // TODO: remove
@@ -80,15 +68,15 @@ public class BoardView extends JPanel implements MouseListener {
         if (allowedMoves.size() > 0) {
             for (MoveData move : allowedMoves) {
                 System.out.println(move);
-                int cellXPos = move.getFromCol() * cellSize + boardBorderWidth;
-                int cellYPos = move.getFromRow() * cellSize + boardBorderWidth;
+                int cellXPos = move.getFromCol() * CELL_SIZE + BOARD_BORDER_WIDTH;
+                int cellYPos = move.getFromRow() * CELL_SIZE + BOARD_BORDER_WIDTH;
                 g.setColor(new Color(0, 255, 0, 100));
-                g.fillRect(cellXPos, cellYPos, cellSize, cellSize);
+                g.fillRect(cellXPos, cellYPos, CELL_SIZE, CELL_SIZE);
 
-                int cellXPos2 = move.getToCol() * cellSize + boardBorderWidth;
-                int cellYPos2 = move.getToRow() * cellSize + boardBorderWidth;
+                int cellXPos2 = move.getToCol() * CELL_SIZE + BOARD_BORDER_WIDTH;
+                int cellYPos2 = move.getToRow() * CELL_SIZE + BOARD_BORDER_WIDTH;
                 g.setColor(new Color(0, 0, 255, 100));
-                g.fillRect(cellXPos2, cellYPos2, cellSize, cellSize);
+                g.fillRect(cellXPos2, cellYPos2, CELL_SIZE, CELL_SIZE);
             }
         }
     }
@@ -107,21 +95,21 @@ public class BoardView extends JPanel implements MouseListener {
 
     private void drawBoardCell(Graphics g, int row, int col, Boolean isPlayingRed) {
         if (row % 2 == col % 2)
-            g.setColor(colorMap.get("CELL_ODD"));
+            g.setColor(CELL_ODD_COLOR);
         else
-            g.setColor(colorMap.get("CELL_EVEN"));
+            g.setColor(CELL_EVEN_COLOR);
 
-        int cellXPos = col * cellSize + boardBorderWidth;
-        int cellYPos = row * cellSize + boardBorderWidth;
-        g.fillRect(cellXPos, cellYPos, cellSize, cellSize);
+        int cellXPos = col * CELL_SIZE + BOARD_BORDER_WIDTH;
+        int cellYPos = row * CELL_SIZE + BOARD_BORDER_WIDTH;
+        g.fillRect(cellXPos, cellYPos, CELL_SIZE, CELL_SIZE);
 
         int cellPieceMargin = 10;
         int shadowSize = 4;
         int borderWidth = 1;
         int pieceXPos = cellXPos + (cellPieceMargin / 2);
         int pieceYPos = cellYPos + (cellPieceMargin / 2) - (shadowSize / 2);
-        int pieceWidth = cellSize - cellPieceMargin;
-        int pieceHeight = cellSize - cellPieceMargin;
+        int pieceWidth = CELL_SIZE - cellPieceMargin;
+        int pieceHeight = CELL_SIZE - cellPieceMargin;
 
         if (gameOver) {
             drawGameOver(g);
@@ -132,46 +120,49 @@ public class BoardView extends JPanel implements MouseListener {
 
         int piece = getBoardPiece(row, col);
 
+        Font kingLabelFont = new Font("Arial", Font.PLAIN, 12);
+        FontMetrics metrics = g.getFontMetrics(kingLabelFont);
+        String kingLabelText = "King";
+        int kingLabelPosX = pieceXPos + (CELL_SIZE / 2) - (metrics.stringWidth(kingLabelText) / 2) - 5;
+        int kingLabelPosY = pieceYPos + (CELL_SIZE / 2);
+
         switch (piece) {
             case RED:
-                g.setColor(colorMap.get("PIECE_SHADOW"));
+                g.setColor(PIECE_SHADOW_COLOR);
                 g.fillOval(pieceXPos - borderWidth, pieceYPos - borderWidth, pieceWidth + (borderWidth * 2), pieceHeight + (borderWidth * 2));
-                g.setColor(colorMap.get("PIECE_SHADOW"));
+                g.setColor(PIECE_SHADOW_COLOR);
                 g.fillOval(pieceXPos, pieceYPos + shadowSize, pieceWidth, pieceHeight);
-                g.setColor(colorMap.get("RED_PIECE"));
+                g.setColor(RED_PIECE_COLOR);
                 g.fillOval(pieceXPos, pieceYPos, pieceWidth, pieceHeight);
                 break;
             case WHITE:
-                g.setColor(colorMap.get("PIECE_SHADOW"));
+                g.setColor(PIECE_SHADOW_COLOR);
                 g.fillOval(pieceXPos - borderWidth, pieceYPos - borderWidth, pieceWidth + (borderWidth * 2), pieceHeight + (borderWidth * 2));
-                g.setColor(colorMap.get("PIECE_SHADOW"));
+                g.setColor(PIECE_SHADOW_COLOR);
                 g.fillOval(pieceXPos, pieceYPos + shadowSize, pieceWidth, pieceHeight);
-                g.setColor(colorMap.get("WHITE_PIECE"));
+                g.setColor(WHITE_PIECE_COLOR);
                 g.fillOval(pieceXPos, pieceYPos, pieceWidth, pieceHeight);
                 break;
             case RED_KING:
-                g.setColor(colorMap.get("PIECE_SHADOW"));
+                g.setColor(PIECE_SHADOW_COLOR);
                 g.fillOval(pieceXPos - borderWidth, pieceYPos - borderWidth, pieceWidth + (borderWidth * 2), pieceHeight + (borderWidth * 2));
-                g.setColor(colorMap.get("PIECE_SHADOW"));
+                g.setColor(PIECE_SHADOW_COLOR);
                 g.fillOval(pieceXPos, pieceYPos + shadowSize, pieceWidth, pieceHeight);
-                g.setColor(colorMap.get("RED_PIECE"));
+                g.setColor(RED_PIECE_COLOR);
                 g.fillOval(pieceXPos, pieceYPos, pieceWidth, pieceHeight);
-                g.setColor(Color.WHITE);
-                // TODO: draw king properly
-                g.setFont(new Font("Arial", Font.PLAIN, 12));
-                g.drawString("King", pieceXPos + (cellSize / 2 - 1), pieceYPos + (cellSize / 2 - 1));
+                g.setColor(WHITE_PIECE_COLOR);
+                g.setFont(kingLabelFont);
+                g.drawString(kingLabelText, kingLabelPosX, kingLabelPosY);
                 break;
             case WHITE_KING:
-                g.setColor(colorMap.get("PIECE_SHADOW"));
+                g.setColor(PIECE_SHADOW_COLOR);
                 g.fillOval(pieceXPos - borderWidth, pieceYPos - borderWidth, pieceWidth + (borderWidth * 2), pieceHeight + (borderWidth * 2));
-                g.setColor(colorMap.get("PIECE_SHADOW"));
+                g.setColor(PIECE_SHADOW_COLOR);
                 g.fillOval(pieceXPos, pieceYPos + shadowSize, pieceWidth, pieceHeight);
-                g.setColor(colorMap.get("WHITE_PIECE"));
+                g.setColor(WHITE_PIECE_COLOR);
                 g.fillOval(pieceXPos, pieceYPos, pieceWidth, pieceHeight);
                 g.setColor(Color.BLACK);
-                // TODO: draw king properly
-                g.setFont(new Font("Arial", Font.PLAIN, 12));
-                g.drawString("King", pieceXPos + (cellSize / 2 - 1), pieceYPos + (cellSize / 2 - 1));
+                g.drawString(kingLabelText, kingLabelPosX, kingLabelPosY);
                 break;
         }
     }
@@ -183,8 +174,8 @@ public class BoardView extends JPanel implements MouseListener {
         Font font = new Font("Arial", Font.BOLD, 40);
         g.setFont(font);
         FontMetrics metrics = g.getFontMetrics(font);
-        int canvasWidth = (cellSize * 8) + (boardBorderWidth * 2);
-        int canvasHeight = (cellSize * 8) + (boardBorderWidth * 2);
+        int canvasWidth = (CELL_SIZE * 8) + (BOARD_BORDER_WIDTH * 2);
+        int canvasHeight = (CELL_SIZE * 8) + (BOARD_BORDER_WIDTH * 2);
         int gameOverPosX = (canvasWidth - metrics.stringWidth(text1)) / 2;
         int gameOverPosY = ((canvasHeight - metrics.getHeight()) / 2) + metrics.getAscent() - (metrics.getHeight() / 2);
         int winnerPosX = (canvasWidth - metrics.stringWidth(text2)) / 2;
@@ -251,8 +242,8 @@ public class BoardView extends JPanel implements MouseListener {
      */
     public void mousePressed(MouseEvent evt) {
         // TODO: wrong click position
-        int col = (evt.getX() - boardBorderWidth) / cellSize;
-        int row = (evt.getY() - boardBorderWidth) / cellSize;
+        int col = (evt.getX() - BOARD_BORDER_WIDTH) / CELL_SIZE;
+        int row = (evt.getY() - BOARD_BORDER_WIDTH) / CELL_SIZE;
         if (col >= 0 && col < 8 && row >= 0 && row < 8)
             handleClick(row, col);
     }
