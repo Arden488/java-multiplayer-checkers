@@ -1,4 +1,4 @@
-import java.awt.*;
+import java.awt.Color;
 
 public interface ViewSettings {
     public static final int CELL_SIZE = 60;

@@ -24,14 +24,4 @@ public class NewRoundData implements Serializable {
     public int getActivePlayerID() {
         return activePlayerID;
     }
-
-    // TODO: remove
-    @Override
-    public String toString() {
-        return "NewRoundData{" +
-                "boardState=" + Arrays.toString(boardState) +
-                ", allowedMoves=" + allowedMoves +
-                ", activePlayerID=" + activePlayerID +
-                '}';
-    }
 }

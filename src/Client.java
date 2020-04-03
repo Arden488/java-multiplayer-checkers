@@ -55,7 +55,6 @@ public class Client {
     protected void handleEvent(Data data) {
         ExchangeEvent type = data.getType();
 
-        // TODO: use common class to avoid repetition
         switch (type) {
             case NEW_ROUND:
                 this.worker.setIsYourTurn(data);
@@ -87,7 +86,7 @@ public class Client {
     }
 
     /**
-     * Inner class
+     * Nested class
      * This class does the client work to communicate with the server
      */
     public class Worker extends SwingWorker<Void, Void> {

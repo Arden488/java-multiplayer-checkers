@@ -1,29 +1,17 @@
-import com.sun.tools.internal.xjc.model.CElement;
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.HashMap;
 
-public class BoardView extends JPanel implements MouseListener, ViewSettings {
+public class BoardView extends JPanel implements MouseListener, ViewSettings, GameSettings {
     private Client.Worker worker = null;
-    private GameView view = null;
     private Boolean gameInProgress = false;
     private Boolean gameOver = false;
     private int winnerID;
     private int[][] boardData;
     private ArrayList<MoveData> allowedMoves;
 
-    // TODO: improve DRY
-    // Cell states (empty or checkers)
-    public static final int EMPTY = 0;
-    public static final int RED = 1;
-    public static final int RED_KING = 2;
-    public static final int WHITE = 3;
-    public static final int WHITE_KING = 4;
 
     private int selectedRow = -1;
     private int selectedCol = -1;
@@ -31,8 +19,7 @@ public class BoardView extends JPanel implements MouseListener, ViewSettings {
     /**
      * Constructor
      */
-    public BoardView(Client.Worker worker, GameView view) {
-        this.view = view;
+    public BoardView(Client.Worker worker) {
         this.worker = worker;
         this.addMouseListener(this);
     }
@@ -48,7 +35,6 @@ public class BoardView extends JPanel implements MouseListener, ViewSettings {
 
         for (int row = 0; row < 8; row++) {
             for (int col = 0; col < 8; col++) {
-                // TODO: get current player id
                 this.drawBoardCell(g, row, col, this.worker.isPlayingRed());
             }
         }

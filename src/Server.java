@@ -127,7 +127,7 @@ public class Server implements Runnable {
     }
 
     /**
-     * Inner class
+     * Nested class
      * This class does the server work to communicate with every client
      */
     public class ClientWorker implements Runnable {
@@ -187,7 +187,7 @@ public class Server implements Runnable {
          * Accepts data and reacts according to the data type
          * @param data
          */
-        private void handleEvent(Data data) {
+        private synchronized void handleEvent(Data data) {
             ExchangeEvent type = data.getType();
 
             switch (type) {
@@ -241,16 +241,15 @@ public class Server implements Runnable {
             dispatcher(playerID, dataToSend);
         }
 
+        // TODO: refactor
         private void handleMove(Data receivedData) {
             if (!isActivePlayer()) return;
 
             int currentPlayerID = model.getActivePlayerID();
 
-            // TODO: DO SOMETHING WITH RECEIVED DATA
             MoveData move = (MoveData) receivedData.getPayload();
             this.model.makeMove(move);
 
-            // TODO: refactor
             if (move.isJump()) {
                 ArrayList<MoveData> allowedMoves = model.generateAllowedMovesFrom(move.getToRow(), move.getToCol());
                 if (allowedMoves == null) {

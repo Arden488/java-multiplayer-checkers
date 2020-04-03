@@ -1,5 +1,3 @@
-import java.util.ArrayList;
-
 /**
  * Game model class
  * Author: Anton Samoilov <2459087s@student.gla.ac.uk>, matric 2459087S
@@ -7,16 +5,11 @@ import java.util.ArrayList;
  * This class is responsible for game data and logic handling
  */
 
-public class GameModel {
+import java.util.ArrayList;
+
+public class GameModel implements GameSettings {
     private int[][] board;
     private int activePlayerID = 1;
-
-    // Cell states (empty or checkers)
-    public static final int EMPTY = 0;
-    public static final int RED = 1;
-    public static final int RED_KING = 2;
-    public static final int WHITE = 3;
-    public static final int WHITE_KING = 4;
 
     /**
      * Constructor

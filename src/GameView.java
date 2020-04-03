@@ -40,7 +40,7 @@ public class GameView extends JFrame implements ActionListener, ViewSettings {
         JPanel layoutPanel = new JPanel(new BorderLayout());
 
         // Paint and display the board
-        boardDisplay = new BoardView(worker, this);
+        boardDisplay = new BoardView(worker);
         layoutPanel.add(boardDisplay, BorderLayout.CENTER);
 
         // Create and attach options panel
