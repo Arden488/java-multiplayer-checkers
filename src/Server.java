@@ -13,10 +13,9 @@ import java.net.Socket;
 import java.util.ArrayList;
 
 public class Server implements Runnable {
-    // Port to connect
     private final int PORT = 5678;
     private final int REQUIRED_PLAYERS = 2;
-    private int connectionNum = 0;
+    private int numberOfConnections = 0;
     private ServerSocket server;
 
     private GameModel model;
@@ -50,8 +49,8 @@ public class Server implements Runnable {
                 // If connections is less than acceptable limit (2)
                 // connect and create a client
                 // else - close the socket
-                if (connectionNum < REQUIRED_PLAYERS) {
-                    connectionNum++;
+                if (numberOfConnections < REQUIRED_PLAYERS) {
+                    numberOfConnections++;
 
                     // Identify vacant player slots (0 or 1)
                     int playerID = players[0] == null ? 0 : 1;
@@ -67,7 +66,7 @@ public class Server implements Runnable {
                     client.sendPlayerID();
                     client.handleAwaitAnotherPlayer();
 
-                    if (connectionNum == REQUIRED_PLAYERS) {
+                    if (numberOfConnections == REQUIRED_PLAYERS) {
                         allowNewGame();
                     }
 
@@ -83,8 +82,9 @@ public class Server implements Runnable {
     }
 
     private void allowNewGame() {
-        players[0].handleEnoughPlayers();
-        players[1].handleEnoughPlayers();
+        for (int i = 0; i < 2; i++) {
+            players[i].handleEnoughPlayers();
+        }
     }
 
     protected void transmit(int targetPlayerID, Data data) {
@@ -99,7 +99,7 @@ public class Server implements Runnable {
      */
     protected void onPlayerDisconnect(int playerID) {
         players[playerID] = null;
-        connectionNum--;
+        numberOfConnections--;
         playersReady--;
     }
 

@@ -52,22 +52,22 @@ public class BoardView extends JPanel implements MouseListener, ViewSettings, Ga
         }
 
         // TODO: remove
-        if (!gameInProgress || !worker.getIsYourTurn())
-            return;
-
-        if (allowedMoves.size() > 0) {
-            for (MoveData move : allowedMoves) {
-                int cellXPos = move.getFromCol() * CELL_SIZE + BOARD_BORDER_WIDTH;
-                int cellYPos = move.getFromRow() * CELL_SIZE + BOARD_BORDER_WIDTH;
-                g.setColor(new Color(0, 255, 0, 100));
-                g.fillRect(cellXPos, cellYPos, CELL_SIZE, CELL_SIZE);
-
-                int cellXPos2 = move.getToCol() * CELL_SIZE + BOARD_BORDER_WIDTH;
-                int cellYPos2 = move.getToRow() * CELL_SIZE + BOARD_BORDER_WIDTH;
-                g.setColor(new Color(0, 0, 255, 100));
-                g.fillRect(cellXPos2, cellYPos2, CELL_SIZE, CELL_SIZE);
-            }
-        }
+//        if (!gameInProgress || !worker.getIsYourTurn())
+//            return;
+//
+//        if (allowedMoves.size() > 0) {
+//            for (MoveData move : allowedMoves) {
+//                int cellXPos = move.getFromCol() * CELL_SIZE + BOARD_BORDER_WIDTH;
+//                int cellYPos = move.getFromRow() * CELL_SIZE + BOARD_BORDER_WIDTH;
+//                g.setColor(new Color(0, 255, 0, 100));
+//                g.fillRect(cellXPos, cellYPos, CELL_SIZE, CELL_SIZE);
+//
+//                int cellXPos2 = move.getToCol() * CELL_SIZE + BOARD_BORDER_WIDTH;
+//                int cellYPos2 = move.getToRow() * CELL_SIZE + BOARD_BORDER_WIDTH;
+//                g.setColor(new Color(0, 0, 255, 100));
+//                g.fillRect(cellXPos2, cellYPos2, CELL_SIZE, CELL_SIZE);
+//            }
+//        }
     }
 
     public void setBoardData(int[][] board) {
