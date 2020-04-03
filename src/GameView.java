@@ -1,39 +1,34 @@
-/**
- * Game view class
- * Author: Anton Samoilov <2459087s@student.gla.ac.uk>, matric 2459087S
- * ------------
- * This class responsible for the game display (frame, buttons etc.)
- */
-
-// TODO: import only required
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.*;
 import java.util.HashMap;
 
-public class GameView extends JFrame {
+public class GameView extends JFrame implements ActionListener {
     private ClientWorker worker = null;
 
-    private int cellSize = 30;
+    private BoardView boardDisplay = null;
+
+    private int cellSize = 60;
     private int cellAxisCount = 8;
     private int windowPanelOffset = 22;
     private int boardBorderWidth = 20;
-    private int optionsPanelMargin = 200;
+    private int optionsPanelMargin = 100;
 
-    // TODO: remove
-    private JLabel logTextLabel = new JLabel("Empty log");
-    private JLabel payloadLabel = new JLabel("Empty payload");
+    private JButton newGameButton;
+    // TODO: rename
+    private JLabel logTextLabel = new JLabel("");
 
     private HashMap<String, Color> colorMap = new HashMap<String, Color>();
 
     /**
      * Constructor
      */
-    public GameView(ClientWorker worker) {
-        this.worker = worker;
-
+    public GameView() {
         setupColors();
         setupFrame();
+    }
 
+    public void drawLayout() {
         JPanel layout = createMainLayout();
         this.add(layout);
 
@@ -72,7 +67,7 @@ public class GameView extends JFrame {
         JPanel layoutPanel = new JPanel(new BorderLayout());
 
         // Paint and display the board
-        BoardView boardDisplay = new BoardView(worker);
+        boardDisplay = new BoardView(worker, this);
         layoutPanel.add(boardDisplay, BorderLayout.CENTER);
 
         // Create and attach options panel
@@ -98,15 +93,10 @@ public class GameView extends JFrame {
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.insets = new Insets(10,10,10,10);
-        JButton newGameButton = new JButton("New Game");
+        newGameButton = new JButton("New Game");
+        newGameButton.setEnabled(false);
+        newGameButton.addActionListener(this);
         optionsPanel.add(newGameButton, gbc);
-
-        // TODO: remove
-        JLabel logTitleLabel = new JLabel("Log:");
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        gbc.insets = new Insets(10,10,0,10);
-        optionsPanel.add(logTitleLabel, gbc);
 
         // Create a status message container
         gbc.gridx = 0;
@@ -114,23 +104,73 @@ public class GameView extends JFrame {
         gbc.insets = new Insets(0,10,20,10);
         optionsPanel.add(this.logTextLabel, gbc);
 
-        // TODO: remove
-        JLabel payloadTitleLabel = new JLabel("Payload:");
-        gbc.gridx = 0;
-        gbc.gridy = 3;
-        gbc.insets = new Insets(10,10,0,10);
-        optionsPanel.add(payloadTitleLabel, gbc);
-
-        // TODO: remove
-        gbc.gridx = 0;
-        gbc.gridy = 4;
-        gbc.insets = new Insets(0,10,20,10);
-        optionsPanel.add(this.payloadLabel, gbc);
-
         return optionsPanel;
     }
 
-    public void test(TestData data) {
-        payloadLabel.setText(data.toString());
+    public void actionPerformed(ActionEvent evt) {
+        Object src = evt.getSource();
+        if (src == newGameButton) {
+            this.worker.registerNewGameRequest();
+            newGameButton.setEnabled(false);
+            this.logTextLabel.setText("Now your opponent needs to press Start New Game");
+        }
+//        else if (src == resignButton)
+//            doResign();
+    }
+
+    public void handleAwaitingOpponent() {
+        this.logTextLabel.setText("Welcome! Waiting for the opponent to connect...");
+    }
+
+    public void handleRequestNewGame() {
+        this.newGameButton.setEnabled(true);
+        this.logTextLabel.setText("Press New Game to start");
+    }
+
+    public void handleNewGame(Data data) {
+        NewRoundData newRoundData = (NewRoundData) data.getPayload();
+
+        changeActivePlayerMessage();
+
+        this.boardDisplay.setGameInProgress(true);
+        this.boardDisplay.setBoardData(newRoundData.getBoardState());
+        this.boardDisplay.updateBoard();
+    }
+
+    public void changeActivePlayerMessage() {
+        if (worker.getIsYourTurn()) {
+            this.logTextLabel.setText("Your turn! Take a move");
+        } else {
+            this.logTextLabel.setText("It is your opponent's turn. Waiting...");
+        }
+    }
+
+    public void handleNewRound(Data data) {
+        NewRoundData newRoundData = (NewRoundData) data.getPayload();
+
+        changeActivePlayerMessage();
+
+        this.boardDisplay.setBoardData(newRoundData.getBoardState());
+        this.boardDisplay.updateBoard();
+    }
+
+    public int getCellSize() {
+        return cellSize;
+    }
+
+    public int getBoardBorderWidth() {
+        return boardBorderWidth;
+    }
+
+    public int getWindowPanelOffset() {
+        return windowPanelOffset;
+    }
+
+    public void setWorker(ClientWorker worker) {
+        this.worker = worker;
+    }
+
+    public HashMap<String, Color> getColorMap() {
+        return colorMap;
     }
 }

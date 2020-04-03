@@ -12,6 +12,7 @@ public class Client {
     private final int PORT = 5678;
     private final String HOST = "127.0.0.1";
     private Socket server = null;
+    private ClientWorker worker = null;
     private GameView view = null;
 
     /**
@@ -20,11 +21,14 @@ public class Client {
     public Client() {
         connect();
 
+        this.view = new GameView();
+
         // Create a client worker and run it
-        ClientWorker worker = new ClientWorker(server, this);
+        worker = new ClientWorker(server, this);
         worker.execute();
 
-        this.view = new GameView(worker);
+        this.view.setWorker(worker);
+        this.view.drawLayout();
     }
 
     /**
@@ -48,13 +52,37 @@ public class Client {
     protected void handleEvent(Data data) {
         String type = data.getType();
 
+        // TODO: use common class to avoid repetition
         switch (type) {
-            case "test":
-                view.test((TestData) data.getPayload());
+            case "NEW_ROUND":
+                this.worker.setIsYourTurn(data);
+                this.view.handleNewRound(data);
                 break;
-            default:
-                System.out.println(type);
+            case "NEW_GAME":
+                this.worker.setIsYourTurn(data);
+                this.view.handleNewGame(data);
+                break;
+            case "GAME_OVER":
+                System.out.println("GAME OVER");
+                System.out.println(data.getPayload());
+                // TODO: handle game over data
+                break;
+            case "ASSIGN_PLAYER_ID":
+                setPlayerID(data);
+                break;
+            case "REQUEST_NEWGAME":
+                this.view.handleRequestNewGame();
+                break;
+            case "WAITING_FOR_OPPONENT":
+                this.view.handleAwaitingOpponent();
+                break;
         }
+    }
+
+    public void setPlayerID(Data data) {
+        PlayerData player = (PlayerData) data.getPayload();
+        int playerID = player.getPlayerID();
+        this.worker.setPlayerID(playerID);
     }
 
     /**

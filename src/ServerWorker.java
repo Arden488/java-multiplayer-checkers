@@ -10,7 +10,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
-public class ServerWorker implements Runnable {
+public class ServerWorker implements Runnable, GameStatus {
     private Socket socket = null;
     private Server server = null;
     private ObjectInputStream inputStream = null;
@@ -42,6 +42,7 @@ public class ServerWorker implements Runnable {
      */
     public void run() {
         try {
+            System.out.println("Send new game data");
             // TODO: Use event manager for handling input streams
             // Get an object from a client via input stream
             Data data = null;
@@ -68,17 +69,88 @@ public class ServerWorker implements Runnable {
     private void handleEvent(Data data) {
         String type = data.getType();
 
+        // TODO: use common class to avoid repetition
         switch (type) {
-            default:
-                this.server.transmit(data);
+            case "MOVE":
+                handleMove(data);
+            case "REQUEST_NEW_GAME":
+                handleRequestNewGame();
         }
     }
 
-    protected void dispatchData(Data data) {
+    protected void dispatcher(int targetPlayerID, Data data) {
+        // TODO: use common class to avoid repetition
+        this.server.transmit(targetPlayerID, data);
+    }
+
+    protected void transmitData(Data data) {
         try {
             outputStream.writeObject(data);
+            outputStream.reset();
         }catch(IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public void sendPlayerID() {
+        Data dataToSend = new Data("ASSIGN_PLAYER_ID");
+        dataToSend.setPayload(new PlayerData(playerID));
+
+        dispatcher(playerID, dataToSend);
+    }
+
+    public void handleAwaitAnotherPlayer() {
+        Data dataToSend = new Data("WAITING_FOR_OPPONENT");
+
+        // TODO: send both players method
+        dispatcher(playerID, dataToSend);
+    }
+
+    public void handleNewGame() {
+        NewRoundData newRoundData = new NewRoundData(model.getBoard(), model.getAllowedMoves(), model.getActivePlayerID());
+        Data dataToSend = new Data("NEW_GAME");
+        // TODO: use different constructors
+        dataToSend.setPayload(newRoundData);
+
+        dispatcher(playerID, dataToSend);
+    }
+
+    public void handleEnoughPlayers() {
+        Data dataToSend = new Data("REQUEST_NEWGAME");
+
+        dispatcher(playerID, dataToSend);
+    }
+
+    private void handleMove(Data receivedData) {
+        if (!isActivePlayer()) return;
+
+        // TODO: DO SOMETHING WITH RECEIVED DATA
+        MoveData move = (MoveData) receivedData.getPayload();
+        this.model.makeMove(move);
+
+        int otherPlayerID = getOtherPlayerID();
+        model.setActivePlayerID(otherPlayerID);
+
+        NewRoundData newRoundData = new NewRoundData(model.getBoard(), model.getAllowedMoves(), model.getActivePlayerID());
+        Data dataToSend = new Data("NEW_ROUND");
+        dataToSend.setPayload(newRoundData);
+
+        dispatcher(0, dataToSend);
+        dispatcher(1, dataToSend);
+    }
+
+    private void handleRequestNewGame() {
+        this.server.onPlayerRequestNewGame();
+    }
+
+    private int getOtherPlayerID() {
+        return model.getActivePlayerID() == 0 ? 1 : 0;
+    }
+
+    private Boolean isActivePlayer() {
+        if (playerID == model.getActivePlayerID())
+            return true;
+
+        return false;
     }
 }
